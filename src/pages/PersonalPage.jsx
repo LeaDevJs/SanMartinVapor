@@ -19,7 +19,10 @@ function PersonalPage() {
   // Cargar lista al inicio
   useEffect(() => {
     fetch(`${API_BASE}/admin/personal`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Error al cargar personal");
+        return res.json();
+      })
       .then((data) => setPersonal(data))
       .catch((err) => console.error("Error cargando personal:", err));
   }, []);
@@ -37,13 +40,26 @@ function PersonalPage() {
       ? `${API_BASE}/admin/personal/${editId}`
       : `${API_BASE}/admin/personal`;
 
+    // ✅ Corrige formato de hora (añade los segundos si faltan)
+    const bodyData = {
+      ...form,
+      disponibleDesde:
+        form.disponibleDesde && form.disponibleDesde.length === 5
+          ? form.disponibleDesde + ":00"
+          : form.disponibleDesde,
+    };
+
     fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(bodyData),
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Error al guardar");
+        return res.json();
+      })
       .then(() => {
+        // Limpia el formulario
         setForm({
           nombre: "",
           apellido: "",
@@ -53,6 +69,7 @@ function PersonalPage() {
           notas: "",
         });
         setEditId(null);
+        // Recarga lista
         return fetch(`${API_BASE}/admin/personal`);
       })
       .then((res) => res.json())
@@ -69,7 +86,12 @@ function PersonalPage() {
 
   // Editar
   const handleEdit = (item) => {
-    setForm(item);
+    setForm({
+      ...item,
+      disponibleDesde: item.disponibleDesde
+        ? item.disponibleDesde.slice(0, 5)
+        : "",
+    });
     setEditId(item.id);
   };
 
