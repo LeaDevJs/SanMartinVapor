@@ -1,21 +1,21 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../App.css"; // 👈 importa estilos
+import { setAuthCredentials } from "../api"; // 👈 usamos helper para guardar auth
+import "../App.css";
 
 function LoginPage({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (username === "admin" && password === "1234") {
-      onLogin();
-      navigate("/personal");
-    } else {
-      alert("Usuario o contraseña incorrectos");
-    }
+    // Guardamos las credenciales en localStorage y en axios
+    setAuthCredentials(username, password);
+    
+    onLogin();
+    navigate("/personal");
   };
 
   return (

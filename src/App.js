@@ -1,15 +1,21 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import PersonalPage from "./pages/PersonalPage";
 import ServiciosPage from "./pages/ServiciosPage";
 import HomePage from "./pages/HomePage";
+import { loadAuthFromStorage, clearAuth } from "./api"; // 👈 importamos helpers
 import "./App.css";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(
     localStorage.getItem("loggedIn") === "true"
   );
+
+  // 👇 cuando arranca la app, si había token en localStorage lo cargamos
+  useEffect(() => {
+    loadAuthFromStorage();
+  }, []);
 
   const handleLogin = () => {
     setLoggedIn(true);
@@ -19,6 +25,7 @@ function App() {
   const handleLogout = () => {
     setLoggedIn(false);
     localStorage.removeItem("loggedIn");
+    clearAuth(); // 👈 borra el Authorization del cliente axios
   };
 
   return (

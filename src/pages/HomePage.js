@@ -6,12 +6,11 @@ function HomePage() {
   const [servicios, setServicios] = useState([]);
 
   useEffect(() => {
-    // GET al backend
-    fetch("http://localhost:8080/admin/personal") // 👈 tu endpoint real
+    fetch("http://localhost:8080/admin/personal")
       .then((res) => res.json())
       .then((data) => setPersonal(data));
 
-    fetch("http://localhost:8080/admin/servicios") // 👈 tu endpoint real
+    fetch("http://localhost:8080/admin/servicios")
       .then((res) => res.json())
       .then((data) => setServicios(data));
   }, []);
@@ -25,34 +24,36 @@ function HomePage() {
 
       <section className="page-container">
         <h2>Listado de Personal</h2>
-        <div>
+        <div className="card-grid">
           {personal.length === 0 ? (
             <p>No hay personal cargado.</p>
           ) : (
-            <ul>
-              {personal.map((p) => (
-                <li key={p.id}>
-                  {p.nombre} {p.apellido} - Legajo {p.legajo} - Disponible desde: {p.disponibleDesde}
-                </li>
-              ))}
-            </ul>
+            personal.map((p) => (
+              <div className="card" key={p.id}>
+                <h3>{p.nombre} {p.apellido}</h3>
+                <p><strong>Legajo:</strong> {p.legajo}</p>
+                <p><strong>Disponible desde:</strong> {p.disponibleDesde}</p>
+                {p.notas && <p><em>{p.notas}</em></p>}
+              </div>
+            ))
           )}
         </div>
       </section>
 
       <section className="page-container">
         <h2>Listado de Servicios</h2>
-        <div>
+        <div className="card-grid">
           {servicios.length === 0 ? (
             <p>No hay servicios cargados.</p>
           ) : (
-            <ul>
-              {servicios.map((s) => (
-                <li key={s.id}>
-                  {s.descripcion} - {s.fecha} - {s.horaInicio} ({s.detalle})
-                </li>
-              ))}
-            </ul>
+            servicios.map((s) => (
+              <div className="card" key={s.id}>
+                <h4>{s.descripcion}</h4>
+                <p><strong>Fecha:</strong> {s.fecha}</p>
+                <p><strong>Hora inicio:</strong> {s.horaInicio}</p>
+                <p><strong>Detalle:</strong> {s.detalle}</p>
+              </div>
+            ))
           )}
         </div>
       </section>

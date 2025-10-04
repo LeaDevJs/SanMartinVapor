@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { api } from "../api"; // 👈 usamos axios centralizado
 import "../App.css";
 
 function PersonalPage() {
@@ -11,38 +12,67 @@ function PersonalPage() {
     disponibleDesde: "",
     notas: ""
   });
-  const [editId, setEditId] = useState(null); // 👈 id que estamos editando
+  const [editId, setEditId] = useState(null);
 
+  // Cargar lista al inicio
+  const load = () => {
+    api.get("/admin/personal")
+      .then((res) => setPersonal(res.data))
+      .catch(() => setPersonal([]));
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  // Manejo de inputs
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  // Ajustar hora a HH:mm:ss
+  const withSeconds = (hhmm) => (hhmm?.length === 5 ? `${hhmm}:00` : hhmm);
+
+  // Crear o actualizar
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const payload = { ...form, disponibleDesde: withSeconds(form.disponibleDesde) };
 
-    if (editId) {
-      // actualizar registro existente
-      setPersonal(
-        personal.map((p) =>
-          p.id === editId ? { ...form, id: editId } : p
-        )
-      );
+    try {
+      if (editId) {
+        await api.put(`/admin/personal/${editId}`, payload);
+      } else {
+        await api.post("/admin/personal", payload);
+      }
+      setForm({ nombre: "", apellido: "", legajo: "", fecha: "", disponibleDesde: "", notas: "" });
       setEditId(null);
-    } else {
-      // crear nuevo
-      setPersonal([...personal, { ...form, id: Date.now() }]);
+      load(); // recargar lista
+    } catch (err) {
+      alert("Error: no autorizado o datos inválidos.");
     }
-
-    // limpiar form
-    setForm({ nombre: "", apellido: "", legajo: "", fecha: "", disponibleDesde: "", notas: "" });
   };
 
-  const handleDelete = (id) => {
-    setPersonal(personal.filter((p) => p.id !== id));
+  // Eliminar
+  const handleDelete = async (id) => {
+    if (!window.confirm("¿Seguro que quieres eliminar este registro?")) return;
+    try {
+      await api.delete(`/admin/personal/${id}`);
+      load();
+    } catch (err) {
+      alert("Error: no autorizado.");
+    }
   };
 
+  // Editar (cargar datos en el form)
   const handleEdit = (item) => {
-    setForm(item);    // 👈 carga datos en el form
+    setForm({
+      nombre: item.nombre,
+      apellido: item.apellido,
+      legajo: item.legajo,
+      fecha: item.fecha,
+      disponibleDesde: item.disponibleDesde?.slice(0, 5), // solo HH:mm
+      notas: item.notas || ""
+    });
     setEditId(item.id);
   };
 

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { api } from "../api"; // 👈 usamos cliente axios
 import "../App.css";
 
 function ServiciosPage() {
@@ -9,39 +10,66 @@ function ServiciosPage() {
     horaInicio: "",
     detalle: ""
   });
-  const [editId, setEditId] = useState(null); // 👈 id en edición
+  const [editId, setEditId] = useState(null);
 
+  // Cargar servicios del backend
+  const load = () => {
+    api.get("/admin/servicios")
+      .then((res) => setServicios(res.data))
+      .catch(() => setServicios([]));
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  // Manejo de inputs
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  // Ajustar hora a HH:mm:ss
+  const withSeconds = (hhmm) => (hhmm?.length === 5 ? `${hhmm}:00` : hhmm);
+
+  // Crear o actualizar
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const payload = { ...form, horaInicio: withSeconds(form.horaInicio) };
 
-    if (editId) {
-      // actualizar servicio existente
-      setServicios(
-        servicios.map((s) =>
-          s.id === editId ? { ...form, id: editId } : s
-        )
-      );
+    try {
+      if (editId) {
+        await api.put(`/admin/servicios/${editId}`, payload);
+      } else {
+        await api.post("/admin/servicios", payload);
+      }
+      setForm({ descripcion: "", fecha: "", horaInicio: "", detalle: "" });
       setEditId(null);
-    } else {
-      // crear nuevo servicio
-      setServicios([...servicios, { ...form, id: Date.now() }]);
+      load();
+    } catch (err) {
+      alert("Error: no autorizado o datos inválidos.");
     }
-
-    // limpiar form
-    setForm({ descripcion: "", fecha: "", horaInicio: "", detalle: "" });
   };
 
-  const handleDelete = (id) => {
-    setServicios(servicios.filter((s) => s.id !== id));
+  // Eliminar
+  const handleDelete = async (id) => {
+    if (!window.confirm("¿Seguro que quieres eliminar este servicio?")) return;
+    try {
+      await api.delete(`/admin/servicios/${id}`);
+      load();
+    } catch (err) {
+      alert("Error: no autorizado.");
+    }
   };
 
-  const handleEdit = (item) => {
-    setForm(item);    // 👈 carga datos en el form
-    setEditId(item.id);
+  // Editar (cargar datos en form)
+  const handleEdit = (s) => {
+    setForm({
+      descripcion: s.descripcion,
+      fecha: s.fecha,
+      horaInicio: s.horaInicio?.slice(0, 5), // solo HH:mm
+      detalle: s.detalle
+    });
+    setEditId(s.id);
   };
 
   return (
