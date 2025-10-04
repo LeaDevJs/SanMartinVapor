@@ -8,15 +8,29 @@ function LoginPage({ onLogin }) {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = (e) => {
+  e.preventDefault();
 
-    // Guardamos las credenciales en localStorage y en axios
-    setAuthCredentials(username, password);
-    
-    onLogin();
-    navigate("/personal");
-  };
+  fetch("https://sanmartinvaporback.onrender.com/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      username,
+      password,
+    }),
+    credentials: "include", // 🔑 guarda la cookie de sesión
+  })
+    .then((res) => {
+      if (res.ok) {
+        onLogin();
+        navigate("/personal");
+      } else {
+        alert("Usuario o contraseña incorrectos");
+      }
+    })
+    .catch(() => alert("Error al conectar con el servidor"));
+};
+
 
   return (
     <div className="page-container">

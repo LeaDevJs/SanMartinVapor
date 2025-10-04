@@ -11,14 +11,12 @@ function ServiciosPage() {
   });
   const [editId, setEditId] = useState(null);
 
-  // ✅ URL del backend en Render
   const API_BASE = "https://sanmartinvaporback.onrender.com";
 
-  // Cargar servicios al inicio
   useEffect(() => {
-    fetch(`${API_BASE}/admin/servicios`)
+    fetch(`${API_BASE}/admin/servicios`, { credentials: "include" })
       .then((res) => {
-        if (!res.ok) throw new Error("Error al cargar servicios");
+        if (!res.ok) throw new Error("No autorizado o error al cargar servicios");
         return res.json();
       })
       .then((data) => setServicios(data))
@@ -29,7 +27,6 @@ function ServiciosPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Crear o editar
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -38,7 +35,6 @@ function ServiciosPage() {
       ? `${API_BASE}/admin/servicios/${editId}`
       : `${API_BASE}/admin/servicios`;
 
-    // ✅ Corrige formato de hora
     const bodyData = {
       ...form,
       horaInicio:
@@ -51,30 +47,31 @@ function ServiciosPage() {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(bodyData),
+      credentials: "include", // 🔑 sesión activa
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Error al guardar");
+        if (!res.ok) throw new Error("Error al guardar (ver sesión o datos)");
         return res.json();
       })
       .then(() => {
-        // Limpia form y recarga lista
         setForm({ descripcion: "", fecha: "", horaInicio: "", detalle: "" });
         setEditId(null);
-        return fetch(`${API_BASE}/admin/servicios`);
+        return fetch(`${API_BASE}/admin/servicios`, { credentials: "include" });
       })
       .then((res) => res.json())
       .then((data) => setServicios(data))
       .catch((err) => console.error("Error guardando servicio:", err));
   };
 
-  // Eliminar
   const handleDelete = (id) => {
-    fetch(`${API_BASE}/admin/servicios/${id}`, { method: "DELETE" })
+    fetch(`${API_BASE}/admin/servicios/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    })
       .then(() => setServicios(servicios.filter((s) => s.id !== id)))
       .catch((err) => console.error("Error eliminando servicio:", err));
   };
 
-  // Editar
   const handleEdit = (item) => {
     setForm({
       ...item,
@@ -120,7 +117,7 @@ function ServiciosPage() {
           <tr>
             <th>Descripción</th>
             <th>Fecha</th>
-            <th>Hora de Inicio</th>
+            <th>Hora Inicio</th>
             <th>Detalle</th>
             <th>Acciones</th>
           </tr>

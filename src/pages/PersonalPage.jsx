@@ -13,14 +13,13 @@ function PersonalPage() {
   });
   const [editId, setEditId] = useState(null);
 
-  // ✅ URL base del backend en Render
   const API_BASE = "https://sanmartinvaporback.onrender.com";
 
-  // Cargar lista al inicio
+  // 🔹 Cargar lista al inicio
   useEffect(() => {
-    fetch(`${API_BASE}/admin/personal`)
+    fetch(`${API_BASE}/admin/personal`, { credentials: "include" })
       .then((res) => {
-        if (!res.ok) throw new Error("Error al cargar personal");
+        if (!res.ok) throw new Error("No autorizado o error al cargar personal");
         return res.json();
       })
       .then((data) => setPersonal(data))
@@ -31,7 +30,7 @@ function PersonalPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Crear o editar
+  // 🔹 Crear o editar
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -40,7 +39,6 @@ function PersonalPage() {
       ? `${API_BASE}/admin/personal/${editId}`
       : `${API_BASE}/admin/personal`;
 
-    // ✅ Corrige formato de hora (añade los segundos si faltan)
     const bodyData = {
       ...form,
       disponibleDesde:
@@ -53,13 +51,13 @@ function PersonalPage() {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(bodyData),
+      credentials: "include", // 🔑 envía la cookie de sesión
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Error al guardar");
+        if (!res.ok) throw new Error("Error al guardar (ver sesión o datos)");
         return res.json();
       })
       .then(() => {
-        // Limpia el formulario
         setForm({
           nombre: "",
           apellido: "",
@@ -69,22 +67,24 @@ function PersonalPage() {
           notas: "",
         });
         setEditId(null);
-        // Recarga lista
-        return fetch(`${API_BASE}/admin/personal`);
+        return fetch(`${API_BASE}/admin/personal`, { credentials: "include" });
       })
       .then((res) => res.json())
       .then((data) => setPersonal(data))
       .catch((err) => console.error("Error guardando personal:", err));
   };
 
-  // Eliminar
+  // 🔹 Eliminar
   const handleDelete = (id) => {
-    fetch(`${API_BASE}/admin/personal/${id}`, { method: "DELETE" })
+    fetch(`${API_BASE}/admin/personal/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    })
       .then(() => setPersonal(personal.filter((p) => p.id !== id)))
       .catch((err) => console.error("Error eliminando personal:", err));
   };
 
-  // Editar
+  // 🔹 Editar
   const handleEdit = (item) => {
     setForm({
       ...item,
