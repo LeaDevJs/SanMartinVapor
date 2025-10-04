@@ -7,31 +7,35 @@ function LoginPage({ onLogin }) {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    fetch("https://sanmartinvaporback.onrender.com/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        username,
-        password,
-      }),
-      credentials: "include", // 🔑 guarda la cookie JSESSIONID
-    })
-      .then((res) => {
-        if (res.ok) {
-          console.log("✅ Login exitoso");
-          onLogin();
-          navigate("/personal");
-        } else {
-          alert("Usuario o contraseña incorrectos");
-        }
-      })
-      .catch((err) => {
-        console.error("Error al conectar con el servidor:", err);
-        alert("Error al conectar con el servidor");
+    try {
+      const response = await fetch("https://sanmartinvaporback.onrender.com/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          username,
+          password,
+        }),
+        credentials: "include", // 👈 Guarda cookie de sesión (JSESSIONID)
       });
+
+      if (response.status === 200) {
+        console.log("✅ Login exitoso");
+        onLogin(); // actualiza estado global de login
+        navigate("/personal");
+      } else if (response.status === 401) {
+        alert("❌ Usuario o contraseña incorrectos");
+      } else {
+        alert(`⚠️ Error inesperado: ${response.status}`);
+      }
+    } catch (err) {
+      console.error("❗ Error al conectar con el servidor:", err);
+      alert("Error al conectar con el servidor");
+    }
   };
 
   return (
