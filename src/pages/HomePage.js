@@ -5,14 +5,19 @@ function HomePage() {
   const [personal, setPersonal] = useState([]);
   const [servicios, setServicios] = useState([]);
 
-  useEffect(() => {
-    fetch("http://localhost:8080/admin/personal")
-      .then((res) => res.json())
-      .then((data) => setPersonal(data));
+  // ✅ URL correcta del backend en Render
+  const API_BASE = "https://sanmartinvaporback.onrender.com";
 
-    fetch("http://localhost:8080/admin/servicios")
+  useEffect(() => {
+    fetch(`${API_BASE}/admin/personal`)
       .then((res) => res.json())
-      .then((data) => setServicios(data));
+      .then((data) => setPersonal(data))
+      .catch((err) => console.error("Error cargando personal:", err));
+
+    fetch(`${API_BASE}/admin/servicios`)
+      .then((res) => res.json())
+      .then((data) => setServicios(data))
+      .catch((err) => console.error("Error cargando servicios:", err));
   }, []);
 
   return (
@@ -30,9 +35,15 @@ function HomePage() {
           ) : (
             personal.map((p) => (
               <div className="card" key={p.id}>
-                <h3>{p.nombre} {p.apellido}</h3>
-                <p><strong>Legajo:</strong> {p.legajo}</p>
-                <p><strong>Disponible desde:</strong> {p.disponibleDesde}</p>
+                <h3>
+                  {p.nombre} {p.apellido}
+                </h3>
+                <p>
+                  <strong>Legajo:</strong> {p.legajo}
+                </p>
+                <p>
+                  <strong>Disponible desde:</strong> {p.disponibleDesde}
+                </p>
                 {p.notas && <p><em>{p.notas}</em></p>}
               </div>
             ))
@@ -49,9 +60,15 @@ function HomePage() {
             servicios.map((s) => (
               <div className="card" key={s.id}>
                 <h4>{s.descripcion}</h4>
-                <p><strong>Fecha:</strong> {s.fecha}</p>
-                <p><strong>Hora inicio:</strong> {s.horaInicio}</p>
-                <p><strong>Detalle:</strong> {s.detalle}</p>
+                <p>
+                  <strong>Fecha:</strong> {s.fecha}
+                </p>
+                <p>
+                  <strong>Hora inicio:</strong> {s.horaInicio}
+                </p>
+                <p>
+                  <strong>Detalle:</strong> {s.detalle}
+                </p>
               </div>
             ))
           )}

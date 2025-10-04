@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { api } from "../api"; // 👈 usamos cliente axios
 import "../App.css";
 
 function ServiciosPage() {
@@ -8,75 +7,67 @@ function ServiciosPage() {
     descripcion: "",
     fecha: "",
     horaInicio: "",
-    detalle: ""
+    detalle: "",
   });
   const [editId, setEditId] = useState(null);
 
-  // Cargar servicios del backend
-  const load = () => {
-    api.get("/admin/servicios")
-      .then((res) => setServicios(res.data))
-      .catch(() => setServicios([]));
-  };
+  // ✅ URL base del backend en Render
+  const API_BASE = "https://sanmartinvaporback.onrender.com";
 
+  // Cargar servicios al iniciar
   useEffect(() => {
-    load();
+    fetch(`${API_BASE}/admin/servicios`)
+      .then((res) => res.json())
+      .then((data) => setServicios(data))
+      .catch((err) => console.error("Error cargando servicios:", err));
   }, []);
 
-  // Manejo de inputs
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Ajustar hora a HH:mm:ss
-  const withSeconds = (hhmm) => (hhmm?.length === 5 ? `${hhmm}:00` : hhmm);
-
-  // Crear o actualizar
-  const handleSubmit = async (e) => {
+  // Crear o editar servicio
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const payload = { ...form, horaInicio: withSeconds(form.horaInicio) };
 
-    try {
-      if (editId) {
-        await api.put(`/admin/servicios/${editId}`, payload);
-      } else {
-        await api.post("/admin/servicios", payload);
-      }
-      setForm({ descripcion: "", fecha: "", horaInicio: "", detalle: "" });
-      setEditId(null);
-      load();
-    } catch (err) {
-      alert("Error: no autorizado o datos inválidos.");
-    }
+    const method = editId ? "PUT" : "POST";
+    const url = editId
+      ? `${API_BASE}/admin/servicios/${editId}`
+      : `${API_BASE}/admin/servicios`;
+
+    fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    })
+      .then((res) => res.json())
+      .then(() => {
+        setForm({ descripcion: "", fecha: "", horaInicio: "", detalle: "" });
+        setEditId(null);
+        return fetch(`${API_BASE}/admin/servicios`);
+      })
+      .then((res) => res.json())
+      .then((data) => setServicios(data))
+      .catch((err) => console.error("Error guardando servicio:", err));
   };
 
-  // Eliminar
-  const handleDelete = async (id) => {
-    if (!window.confirm("¿Seguro que quieres eliminar este servicio?")) return;
-    try {
-      await api.delete(`/admin/servicios/${id}`);
-      load();
-    } catch (err) {
-      alert("Error: no autorizado.");
-    }
+  // Eliminar servicio
+  const handleDelete = (id) => {
+    fetch(`${API_BASE}/admin/servicios/${id}`, { method: "DELETE" })
+      .then(() => setServicios(servicios.filter((s) => s.id !== id)))
+      .catch((err) => console.error("Error eliminando servicio:", err));
   };
 
-  // Editar (cargar datos en form)
-  const handleEdit = (s) => {
-    setForm({
-      descripcion: s.descripcion,
-      fecha: s.fecha,
-      horaInicio: s.horaInicio?.slice(0, 5), // solo HH:mm
-      detalle: s.detalle
-    });
-    setEditId(s.id);
+  // Editar servicio
+  const handleEdit = (item) => {
+    setForm(item);
+    setEditId(item.id);
   };
 
   return (
     <div className="page-container">
       <h2>Gestión de Servicios</h2>
 
-      {/* Formulario */}
       <form onSubmit={handleSubmit}>
         <input
           name="descripcion"
@@ -105,7 +96,6 @@ function ServiciosPage() {
         <button type="submit">{editId ? "Actualizar" : "Agregar"}</button>
       </form>
 
-      {/* Tabla */}
       <table>
         <thead>
           <tr>
