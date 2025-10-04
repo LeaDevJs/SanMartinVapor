@@ -11,13 +11,16 @@ function ServiciosPage() {
   });
   const [editId, setEditId] = useState(null);
 
-  // ✅ URL base del backend en Render
+  // ✅ URL del backend en Render
   const API_BASE = "https://sanmartinvaporback.onrender.com";
 
-  // Cargar servicios al iniciar
+  // Cargar servicios al inicio
   useEffect(() => {
     fetch(`${API_BASE}/admin/servicios`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Error al cargar servicios");
+        return res.json();
+      })
       .then((data) => setServicios(data))
       .catch((err) => console.error("Error cargando servicios:", err));
   }, []);
@@ -26,7 +29,7 @@ function ServiciosPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Crear o editar servicio
+  // Crear o editar
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -35,13 +38,26 @@ function ServiciosPage() {
       ? `${API_BASE}/admin/servicios/${editId}`
       : `${API_BASE}/admin/servicios`;
 
+    // ✅ Corrige formato de hora
+    const bodyData = {
+      ...form,
+      horaInicio:
+        form.horaInicio && form.horaInicio.length === 5
+          ? form.horaInicio + ":00"
+          : form.horaInicio,
+    };
+
     fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(bodyData),
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Error al guardar");
+        return res.json();
+      })
       .then(() => {
+        // Limpia form y recarga lista
         setForm({ descripcion: "", fecha: "", horaInicio: "", detalle: "" });
         setEditId(null);
         return fetch(`${API_BASE}/admin/servicios`);
@@ -51,16 +67,19 @@ function ServiciosPage() {
       .catch((err) => console.error("Error guardando servicio:", err));
   };
 
-  // Eliminar servicio
+  // Eliminar
   const handleDelete = (id) => {
     fetch(`${API_BASE}/admin/servicios/${id}`, { method: "DELETE" })
       .then(() => setServicios(servicios.filter((s) => s.id !== id)))
       .catch((err) => console.error("Error eliminando servicio:", err));
   };
 
-  // Editar servicio
+  // Editar
   const handleEdit = (item) => {
-    setForm(item);
+    setForm({
+      ...item,
+      horaInicio: item.horaInicio ? item.horaInicio.slice(0, 5) : "",
+    });
     setEditId(item.id);
   };
 
