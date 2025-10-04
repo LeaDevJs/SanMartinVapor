@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { setAuthCredentials } from "../api"; // 👈 usamos helper para guardar auth
 import "../App.css";
 
 function LoginPage({ onLogin }) {
@@ -9,28 +8,31 @@ function LoginPage({ onLogin }) {
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  fetch("https://sanmartinvaporback.onrender.com/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      username,
-      password,
-    }),
-    credentials: "include", // 🔑 guarda la cookie de sesión
-  })
-    .then((res) => {
-      if (res.ok) {
-        onLogin();
-        navigate("/personal");
-      } else {
-        alert("Usuario o contraseña incorrectos");
-      }
+    fetch("https://sanmartinvaporback.onrender.com/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        username,
+        password,
+      }),
+      credentials: "include", // 🔑 guarda la cookie JSESSIONID
     })
-    .catch(() => alert("Error al conectar con el servidor"));
-};
-
+      .then((res) => {
+        if (res.ok) {
+          console.log("✅ Login exitoso");
+          onLogin();
+          navigate("/personal");
+        } else {
+          alert("Usuario o contraseña incorrectos");
+        }
+      })
+      .catch((err) => {
+        console.error("Error al conectar con el servidor:", err);
+        alert("Error al conectar con el servidor");
+      });
+  };
 
   return (
     <div className="page-container">
